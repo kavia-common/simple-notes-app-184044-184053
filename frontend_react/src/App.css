@@ -1,3 +1,6 @@
 /* Minimal additional helpers (kept for CRA compatibility) */
 .App { text-align: left; }
 .hidden { display: none !important; }
+
+/* Optional utility to apply glass when needed */
+.glass { }
