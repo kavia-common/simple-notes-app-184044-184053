@@ -1,4 +1,6 @@
-:root {
+/* Theme tokens are scoped on the root via data-theme attr. Default (no attr) falls back to light. */
+:root,
+:root[data-theme="light"] {
   /* Brand colors */
   --color-primary: #3b82f6;
   --color-secondary: #64748b;
@@ -12,7 +14,7 @@
   --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
   --shadow-md: 0 8px 24px rgba(17, 24, 39, 0.12);
 
-  /* Glass tokens */
+  /* Glass tokens (light) */
   --glass-alpha: 0.56;               /* panel translucency */
   --glass-elevated-alpha: 0.66;      /* slightly more solid */
   --glass-border: rgba(255, 255, 255, 0.40);
@@ -39,6 +41,70 @@
   /* Surface fallbacks (used for text fields etc.) */
   --color-surface: rgba(255, 255, 255, 0.7);
   --color-border: rgba(0, 0, 0, 0.06);
+
+  /* Component-specific adjustable tokens for contrast */
+  --input-bg: rgba(255,255,255,0.65);
+  --input-bg-hover: rgba(255,255,255,0.75);
+  --input-bg-focus: rgba(255,255,255,0.9);
+  --input-border: rgba(255,255,255,0.6);
+
+  --btn-secondary-bg: rgba(255,255,255,0.65);
+  --btn-secondary-bg-hover: rgba(255,255,255,0.8);
+  --btn-secondary-border: rgba(255,255,255,0.7);
+
+  --note-content: #1f2937;
+
+  --divider-gradient: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+}
+
+/* Dark theme overrides */
+:root[data-theme="dark"] {
+  --color-primary: #60a5fa;      /* slightly lighter primary for dark contrast */
+  --color-secondary: #9aa4b2;
+  --color-success: #22d3ee;
+  --color-error: #f87171;
+  --color-text: #e5e7eb;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.5);
+
+  /* Glass tuned for dark backgrounds */
+  --glass-alpha: 0.24;                /* darker panels need less transparency */
+  --glass-elevated-alpha: 0.30;
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-border-soft: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 10px 28px rgba(0,0,0,0.6);
+  --glass-blur: 18px;
+  --ring-offset: rgba(0,0,0,0.6);
+
+  /* Specular tuned for dark */
+  --specular-white: rgba(255,255,255,0.7);
+  --specular-white-soft: rgba(255,255,255,0.2);
+  --specular-alpha: 0.22;             /* slightly stronger highlight to read through dark */
+  --sheen-alpha: 0.18;
+
+  /* Background gradient for dark theme */
+  --bg-gradient:
+    radial-gradient(1200px 800px at -10% -10%, rgba(59,130,246,0.10), rgba(0,0,0,0) 60%),
+    radial-gradient(1200px 800px at 110% -10%, rgba(34,211,238,0.10), rgba(0,0,0,0) 60%),
+    linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+  --color-bg: #0b1220;
+
+  --color-surface: rgba(10, 15, 28, 0.65);
+  --color-border: rgba(255,255,255,0.06);
+
+  --input-bg: rgba(15,23,42,0.6);
+  --input-bg-hover: rgba(15,23,42,0.7);
+  --input-bg-focus: rgba(15,23,42,0.85);
+  --input-border: rgba(255,255,255,0.12);
+
+  --btn-secondary-bg: rgba(17,24,39,0.55);
+  --btn-secondary-bg-hover: rgba(17,24,39,0.7);
+  --btn-secondary-border: rgba(255,255,255,0.14);
+
+  --note-content: #cbd5e1;
+
+  --divider-gradient: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
 }
 
 * { box-sizing: border-box; }
@@ -176,6 +242,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 200ms ease, color 120ms ease;
 }
 
 a { color: inherit; }
@@ -271,23 +338,59 @@ button, input, textarea {
   align-items: center;
 }
 
+/* Theme toggle icon button (glass micro button) */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--btn-secondary-bg);
+  color: var(--color-text);
+  border: var(--border-1) solid var(--btn-secondary-border);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 80ms ease, background 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.theme-toggle:hover {
+  background: var(--btn-secondary-bg-hover);
+}
+.theme-toggle:active {
+  transform: translateY(1px);
+}
+.theme-toggle:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,0.9),
+    0 0 0 4px rgba(59,130,246,0.4);
+}
+.theme-toggle .icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .search-input {
   width: 240px;
   max-width: 48vw;
   padding: 10px 12px;
-  background: rgba(255,255,255,0.65);
-  border: var(--border-1) solid rgba(255,255,255,0.6);
+  background: var(--input-bg);
+  border: var(--border-1) solid var(--input-border);
   border-radius: 12px;
   outline: none;
   transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease, transform 80ms ease;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 1px 2px rgba(17,24,39,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), var(--shadow-sm);
 
   /* Specular: subtle top sheen and corner bloom using backgrounds */
   background-image:
-    linear-gradient(to bottom, rgba(255,255,255,0.25), rgba(255,255,255,0) 38%),
-    radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.35), rgba(255,255,255,0) 60%);
+    linear-gradient(to bottom, rgba(255,255,255,0.22), rgba(255,255,255,0) 38%),
+    radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.28), rgba(255,255,255,0) 60%);
   background-blend-mode: screen, normal;
   background-clip: padding-box;
   position: relative;
@@ -299,15 +402,15 @@ button, input, textarea {
 }
 
 .search-input:hover {
-  background: rgba(255,255,255,0.75);
+  background: var(--input-bg-hover);
 }
 
 .search-input:focus {
   border-color: rgba(59, 130, 246, 0.6);
   box-shadow:
-    0 0 0 2px rgba(255,255,255,0.9),
+    0 0 0 2px rgba(255,255,255,0.85),
     0 0 0 4px rgba(59, 130, 246, 0.35);
-  background: rgba(255,255,255,0.9);
+  background: var(--input-bg-focus);
 }
 
 .content {
@@ -380,8 +483,8 @@ button, input, textarea {
 .textarea {
   width: 100%;
   padding: 10px 12px;
-  background: rgba(255,255,255,0.65);
-  border: var(--border-1) solid rgba(255,255,255,0.6);
+  background: var(--input-bg);
+  border: var(--border-1) solid var(--input-border);
   border-radius: 12px;
   outline: none;
   resize: vertical;
@@ -389,11 +492,11 @@ button, input, textarea {
   transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 1px 2px rgba(17,24,39,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), var(--shadow-sm);
 
   /* Specular top sheen as background layer to keep semantics and a11y */
   background-image:
-    linear-gradient(to bottom, rgba(255,255,255,0.22), rgba(255,255,255,0.0) 40%);
+    linear-gradient(to bottom, rgba(255,255,255,0.18), rgba(255,255,255,0.0) 40%);
   background-blend-mode: screen;
 }
 
@@ -409,16 +512,16 @@ button, input, textarea {
 
 .input:hover,
 .textarea:hover {
-  background: rgba(255,255,255,0.75);
+  background: var(--input-bg-hover);
 }
 
 .input:focus,
 .textarea:focus {
   border-color: rgba(59, 130, 246, 0.6);
   box-shadow:
-    0 0 0 2px rgba(255,255,255,0.9),
+    0 0 0 2px rgba(255,255,255,0.85),
     0 0 0 4px rgba(59,130,246,0.35);
-  background: rgba(255,255,255,0.9);
+  background: var(--input-bg-focus);
 }
 
 /* Buttons */
@@ -474,15 +577,15 @@ button, input, textarea {
 .btn-primary:focus-visible {
   outline: none;
   box-shadow:
-    0 0 0 2px #ffffff,
+    0 0 0 2px rgba(255,255,255,0.95),
     0 0 0 4px rgba(59,130,246,0.55);
 }
 
 /* Secondary: glassy button */
 .btn-secondary {
-  background: rgba(255,255,255,0.65);
+  background: var(--btn-secondary-bg);
   color: var(--color-text);
-  border-color: rgba(255,255,255,0.7);
+  border-color: var(--btn-secondary-border);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 
@@ -504,7 +607,7 @@ button, input, textarea {
 }
 
 .btn-secondary:hover {
-  background: rgba(255,255,255,0.8);
+  background: var(--btn-secondary-bg-hover);
 }
 
 .btn-secondary:focus-visible {
@@ -588,8 +691,8 @@ button, input, textarea {
 
 .note-card:hover {
   transform: translateY(-1px);
-  background: rgba(255,255,255,0.62);
-  box-shadow: 0 10px 28px rgba(2,6,23,0.16);
+  background: rgba(255,255,255, var(--glass-alpha));
+  box-shadow: 0 10px 28px rgba(2,6,23,0.24);
   background-image:
     linear-gradient(var(--specular-angle), rgba(255,255,255,0.24), rgba(255,255,255,0) 40%),
     radial-gradient(120% 60% at -10% -20%, rgba(255,255,255,0.36), rgba(255,255,255,0) 60%);
@@ -608,12 +711,12 @@ button, input, textarea {
 
 .note-content {
   margin: 0;
-  color: #1f2937;
+  color: var(--note-content);
 }
 
 .divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  background: var(--divider-gradient);
   opacity: 0.7;
   margin: 10px 0;
 }

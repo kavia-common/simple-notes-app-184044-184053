@@ -5,17 +5,27 @@ import NoteForm from './components/NoteForm';
 import NotesList from './components/NotesList';
 import { loadNotes, saveNotes } from './utils/storage';
 
+// Key used to persist theme
+const THEME_STORAGE_KEY = 'notesApp:theme';
+
 // PUBLIC_INTERFACE
 export default function App() {
   /**
    * Single-page Notes App
    * - Provides header, new note form, and notes list
    * - Manages notes state and persists via localStorage
-   * - Implements light theme with primary accents
+   * - Theme: light/dark via [data-theme] on root, persisted to localStorage
    */
   const [notes, setNotes] = useState(() => loadNotes());
   const [filter, setFilter] = useState('');
-  const [theme] = useState('light'); // fixed light theme per style guide
+  const [theme, setTheme] = useState(() => {
+    // Determine initial theme: saved preference or system preference
+    if (typeof window === 'undefined') return 'light';
+    const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved === 'light' || saved === 'dark') return saved;
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return prefersDark ? 'dark' : 'light';
+  });
   const headerRef = useRef(null);
 
   useEffect(() => {
@@ -26,7 +36,26 @@ export default function App() {
   useEffect(() => {
     // Apply theme to root for CSS variables
     document.documentElement.setAttribute('data-theme', theme);
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // ignore
+    }
   }, [theme]);
+
+  useEffect(() => {
+    // Listen for system preference changes if user hasn't set explicit preference yet
+    // If user has a saved preference, we respect that and skip dynamic changes.
+    const saved = typeof window !== 'undefined' ? window.localStorage.getItem(THEME_STORAGE_KEY) : null;
+    if (saved === 'light' || saved === 'dark') return;
+
+    const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    if (!mq || !mq.addEventListener) return;
+
+    const handler = (e) => setTheme(e.matches ? 'dark' : 'light');
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const filteredNotes = useMemo(() => {
     if (!filter.trim()) return notes;
@@ -71,6 +100,13 @@ export default function App() {
     setNotes((prev) => prev.filter((n) => n.id !== id));
   };
 
+  const toggleTheme = () => {
+    setTheme((t) => (t === 'light' ? 'dark' : 'light'));
+  };
+
+  const themeLabel = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+  const themeIcon = theme === 'light' ? '🌙' : '☀️';
+
   return (
     <div className="notes-app">
       <header className="app-header sheen-top highlight-angled" ref={headerRef}>
@@ -78,6 +114,15 @@ export default function App() {
           Simple Notes
         </h1>
         <div className="header-actions">
+          <button
+            className="theme-toggle light-sweep"
+            onClick={toggleTheme}
+            aria-label={themeLabel}
+            title={themeLabel}
+            type="button"
+          >
+            <span className="icon" aria-hidden="true">{themeIcon}</span>
+          </button>
           <label htmlFor="search" className="sr-only">
             Search notes
           </label>
