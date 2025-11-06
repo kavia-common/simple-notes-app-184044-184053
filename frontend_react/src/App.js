@@ -4,20 +4,27 @@ import './index.css';
 import NoteForm from './components/NoteForm';
 import NotesList from './components/NotesList';
 import { loadNotes, saveNotes } from './utils/storage';
+import Calendar, { toISODate } from './components/Calendar';
 
-// Key used to persist theme
+// Key used to persist theme and selected date
 const THEME_STORAGE_KEY = 'notesApp:theme';
+const DATE_STORAGE_KEY = 'notesApp:selectedDate';
 
 // PUBLIC_INTERFACE
 export default function App() {
   /**
    * Single-page Notes App
-   * - Provides header, new note form, and notes list
+   * - Provides header, new note form, calendar filter, and notes list
    * - Manages notes state and persists via localStorage
    * - Theme: light/dark via [data-theme] on root, persisted to localStorage
    */
   const [notes, setNotes] = useState(() => loadNotes());
   const [filter, setFilter] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    const raw = window.localStorage.getItem(DATE_STORAGE_KEY);
+    return raw ? new Date(raw) : null;
+  });
   const [theme, setTheme] = useState(() => {
     // Determine initial theme: saved preference or system preference
     if (typeof window === 'undefined') return 'light';
@@ -44,6 +51,19 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => {
+    // Persist selected date (or clear)
+    try {
+      if (selectedDate) {
+        window.localStorage.setItem(DATE_STORAGE_KEY, selectedDate.toISOString());
+      } else {
+        window.localStorage.removeItem(DATE_STORAGE_KEY);
+      }
+    } catch {
+      // ignore
+    }
+  }, [selectedDate]);
+
+  useEffect(() => {
     // Listen for system preference changes if user hasn't set explicit preference yet
     // If user has a saved preference, we respect that and skip dynamic changes.
     const saved = typeof window !== 'undefined' ? window.localStorage.getItem(THEME_STORAGE_KEY) : null;
@@ -57,7 +77,8 @@ export default function App() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  const filteredNotes = useMemo(() => {
+  // Filter notes by text first
+  const textFiltered = useMemo(() => {
     if (!filter.trim()) return notes;
     const q = filter.trim().toLowerCase();
     return notes.filter(
@@ -66,6 +87,16 @@ export default function App() {
         (n.content || '').toLowerCase().includes(q)
     );
   }, [notes, filter]);
+
+  // Optional date filter: when selectedDate is set, match notes created on that day (local)
+  const filteredNotes = useMemo(() => {
+    if (!selectedDate) return textFiltered;
+    const selectedKey = toISODate(selectedDate);
+    return textFiltered.filter((n) => {
+      const createdKey = toISODate(n.createdAt);
+      return createdKey === selectedKey;
+    });
+  }, [textFiltered, selectedDate]);
 
   const handleAdd = (draft) => {
     const now = new Date().toISOString();
@@ -140,6 +171,20 @@ export default function App() {
 
       <main className="content">
         <section
+          className="calendar-section"
+          aria-labelledby="calendar-heading"
+        >
+          <h2 id="calendar-heading" className="section-title">
+            Pick a date to filter
+          </h2>
+          <Calendar
+            labelledById="calendar-heading"
+            selectedDate={selectedDate}
+            onChange={setSelectedDate}
+          />
+        </section>
+
+        <section
           className="new-note-section"
           aria-labelledby="new-note-heading"
         >
@@ -154,7 +199,7 @@ export default function App() {
           aria-labelledby="notes-list-heading"
         >
           <h2 id="notes-list-heading" className="section-title">
-            Your notes ({filteredNotes.length})
+            Your notes ({filteredNotes.length}) {selectedDate ? `on ${new Date(selectedDate).toLocaleDateString()}` : ''}
           </h2>
           <NotesList
             notes={filteredNotes}
