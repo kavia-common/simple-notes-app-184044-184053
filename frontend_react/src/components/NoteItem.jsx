@@ -73,14 +73,14 @@ export default function NoteItem({ note, onUpdate, onDelete }) {
           <div className="divider" />
           <div className="actions">
             <button
-              className="btn btn-secondary"
+              className="btn btn-secondary light-sweep"
               onClick={() => setIsEditing(true)}
               aria-label={`Edit note ${note.title || 'Untitled'}`}
             >
               ✏️ Edit
             </button>
             <button
-              className="btn btn-danger"
+              className="btn btn-danger light-sweep"
               onClick={confirmDelete}
               aria-label={`Delete note ${note.title || 'Untitled'}`}
             >
@@ -115,13 +115,13 @@ export default function NoteItem({ note, onUpdate, onDelete }) {
           </div>
           <div className="divider" />
           <div className="actions">
-            <button className="btn btn-primary" onClick={save} aria-label="Save note">
+            <button className="btn btn-primary light-sweep" onClick={save} aria-label="Save note">
               💾 Save
             </button>
-            <button className="btn btn-ghost" onClick={cancel} aria-label="Cancel editing">
+            <button className="btn btn-ghost light-sweep" onClick={cancel} aria-label="Cancel editing">
               Cancel
             </button>
-            <button className="btn btn-danger" onClick={confirmDelete} aria-label="Delete note">
+            <button className="btn btn-danger light-sweep" onClick={confirmDelete} aria-label="Delete note">
               🗑️ Delete
             </button>
           </div>

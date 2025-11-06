@@ -62,12 +62,12 @@ export default function NoteForm({ onSubmit }) {
           ) : null}
         </div>
         <div className="actions" style={{ justifyContent: 'flex-end' }}>
-          <button type="submit" className="btn btn-primary" aria-label="Add note">
+          <button type="submit" className="btn btn-primary light-sweep" aria-label="Add note">
             ➕ Add
           </button>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-secondary light-sweep"
             onClick={() => {
               setTitle('');
               setContent('');

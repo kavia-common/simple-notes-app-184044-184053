@@ -73,7 +73,7 @@ export default function App() {
 
   return (
     <div className="notes-app">
-      <header className="app-header" ref={headerRef}>
+      <header className="app-header sheen-top highlight-angled" ref={headerRef}>
         <h1 className="app-title" aria-label="Simple Notes App">
           Simple Notes
         </h1>
@@ -87,7 +87,7 @@ export default function App() {
             placeholder="Search notes..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="search-input"
+            className="search-input light-sweep"
             aria-label="Search notes"
           />
         </div>

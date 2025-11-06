@@ -4,3 +4,7 @@
 
 /* Optional utility to apply glass when needed */
 .glass { }
+
+/* Specular helpers are defined in index.css and applied via utility classes:
+   - .sheen-top, .highlight-angled, .highlight-corner
+   - .light-sweep for hover/focus interactive sheen (motion-safe) */

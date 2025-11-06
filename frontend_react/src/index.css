@@ -21,6 +21,15 @@
   --glass-blur: 20px;
   --ring-offset: rgba(255,255,255,0.75);
 
+  /* Specular highlight tokens */
+  --specular-white: rgba(255, 255, 255, 0.85);
+  --specular-white-soft: rgba(255, 255, 255, 0.35);
+  --specular-angle: 35deg;
+  --specular-alpha: 0.18;        /* general overlay strength */
+  --sheen-alpha: 0.22;           /* sheen for primary buttons */
+  --sweep-duration: 900ms;       /* light sweep animation duration */
+  --sweep-size: 120px;           /* width of sweeping light */
+
   /* Background gradient for light theme */
   --bg-gradient: radial-gradient(1200px 800px at -10% -10%, rgba(59,130,246,0.10), rgba(255,255,255,0) 60%),
                  radial-gradient(1200px 800px at 110% -10%, rgba(6,182,212,0.10), rgba(255,255,255,0) 60%),
@@ -33,6 +42,126 @@
 }
 
 * { box-sizing: border-box; }
+
+/* =============== Reusable highlight utilities =============== */
+
+/* Angled linear highlight overlay */
+.highlight-angled {
+  position: relative;
+  isolation: isolate;
+}
+
+.highlight-angled::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      var(--specular-angle),
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,var(--specular-alpha)) 18%,
+      rgba(255,255,255,0.0) 38%
+    );
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
+/* Radial specular bloom at a corner */
+.highlight-corner {
+  position: relative;
+  isolation: isolate;
+}
+
+.highlight-corner::after {
+  content: "";
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  left: -10%;
+  top: -20%;
+  pointer-events: none;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, var(--specular-white-soft), transparent 70%);
+  filter: blur(8px);
+  mix-blend-mode: screen;
+  opacity: 0.55;
+}
+
+/* Subtle top sheen for glass panels */
+.sheen-top {
+  position: relative;
+  isolation: isolate;
+}
+
+.sheen-top::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.35) 0%,
+      rgba(255,255,255,0.18) 10%,
+      rgba(255,255,255,0.0) 35%
+    );
+  mix-blend-mode: screen;
+}
+
+/* Interactive light sweep (horizontal) */
+.light-sweep {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.light-sweep::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  width: var(--sweep-size);
+  left: -140%;
+  border-radius: 20px;
+  background: linear-gradient(
+    75deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.35) 45%,
+    rgba(255,255,255,0.8) 50%,
+    rgba(255,255,255,0.35) 55%,
+    rgba(255,255,255,0) 100%
+  );
+  mix-blend-mode: screen;
+  transform: skewX(-12deg);
+}
+
+/* Trigger the sweep on hover/focus/active */
+.light-sweep:hover::after,
+.light-sweep:focus-visible::after,
+.light-sweep:active::after {
+  animation: sweep var(--sweep-duration) ease-out forwards;
+}
+
+/* Motion-safe keyframes */
+@keyframes sweep {
+  from { left: -140%; }
+  to { left: 160%; }
+}
+
+/* Prefer-reduced-motion: disable sweep animation */
+@media (prefers-reduced-motion: reduce) {
+  .light-sweep::after {
+    display: none;
+  }
+}
+
+/* Optional helper to adjust blend behavior in contexts */
+.blend-screen { mix-blend-mode: screen; }
+.blend-softlight { mix-blend-mode: soft-light; }
 
 html, body, #root {
   height: 100%;
@@ -101,14 +230,21 @@ button, input, textarea {
   z-index: 10;
 
   /* Glass */
-  background: rgba(255, 255, 255, var(--glass-elevated-alpha));
+  background:
+    rgba(255, 255, 255, var(--glass-elevated-alpha));
   border: var(--border-1) solid var(--glass-border-soft);
   border-top-color: var(--glass-border);
   border-left-color: var(--glass-border);
   backdrop-filter: saturate(140%) blur(var(--glass-blur));
   -webkit-backdrop-filter: saturate(140%) blur(var(--glass-blur));
   box-shadow: var(--glass-shadow);
+
+  /* Specular overlay stack */
+  /* Add top sheen and angled highlight without changing layout */
+  position: sticky; /* reaffirm stacking context */
 }
+
+.app-header.sheen-top.highlight-angled { /* noop selector to hint combined usage */ }
 
 .app-title {
   margin: 0;
@@ -147,6 +283,19 @@ button, input, textarea {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 1px 2px rgba(17,24,39,0.06);
+
+  /* Specular: subtle top sheen and corner bloom using backgrounds */
+  background-image:
+    linear-gradient(to bottom, rgba(255,255,255,0.25), rgba(255,255,255,0) 38%),
+    radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.35), rgba(255,255,255,0) 60%);
+  background-blend-mode: screen, normal;
+  background-clip: padding-box;
+  position: relative;
+}
+
+.search-input.light-sweep { /* if utility applied via class, ensure overflow hidden */
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .search-input:hover {
@@ -181,13 +330,20 @@ button, input, textarea {
   border-radius: var(--radius);
 
   /* Glass */
-  background: rgba(255, 255, 255, var(--glass-alpha));
+  background:
+    rgba(255, 255, 255, var(--glass-alpha));
   border: var(--border-1) solid var(--glass-border-soft);
   border-top-color: var(--glass-border);
   border-left-color: var(--glass-border);
   backdrop-filter: saturate(140%) blur(var(--glass-blur));
   -webkit-backdrop-filter: saturate(140%) blur(var(--glass-blur));
   box-shadow: var(--glass-shadow);
+
+  /* Glossy sheen via layered background (kept subtle for contrast) */
+  background-image:
+    linear-gradient(to bottom, rgba(255,255,255,0.25), rgba(255,255,255,0) 36%),
+    radial-gradient(120% 60% at -10% -20%, rgba(255,255,255,0.28), rgba(255,255,255,0) 60%);
+  background-blend-mode: screen, normal;
 }
 
 .app-footer {
@@ -234,6 +390,17 @@ button, input, textarea {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 1px 2px rgba(17,24,39,0.06);
+
+  /* Specular top sheen as background layer to keep semantics and a11y */
+  background-image:
+    linear-gradient(to bottom, rgba(255,255,255,0.22), rgba(255,255,255,0.0) 40%);
+  background-blend-mode: screen;
+}
+
+.input.light-sweep,
+.textarea.light-sweep {
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .textarea {
@@ -278,7 +445,27 @@ button, input, textarea {
   color: #ffffff;
   border-color: rgba(59,130,246,0.6);
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+
+  /* Glossy sheen layer */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,var(--sheen-alpha)) 0%,
+      rgba(255,255,255,0.0) 45%
+    );
+  mix-blend-mode: screen;
+}
+.btn-primary.light-sweep::after { /* enable sweep via utility class if present */ }
 
 .btn-primary:hover {
   filter: brightness(0.98);
@@ -298,6 +485,22 @@ button, input, textarea {
   border-color: rgba(255,255,255,0.7);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+
+  /* enable glossy effect */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-secondary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.25), rgba(255,255,255,0) 40%),
+    radial-gradient(90% 50% at -10% -20%, rgba(255,255,255,0.22), rgba(255,255,255,0) 60%);
+  background-blend-mode: screen, normal;
 }
 
 .btn-secondary:hover {
@@ -364,7 +567,8 @@ button, input, textarea {
   border-radius: 16px;
 
   /* Glass */
-  background: rgba(255, 255, 255, var(--glass-alpha));
+  background:
+    rgba(255, 255, 255, var(--glass-alpha));
   border: var(--border-1) solid var(--glass-border-soft);
   border-top-color: var(--glass-border);
   border-left-color: var(--glass-border);
@@ -372,12 +576,23 @@ button, input, textarea {
   -webkit-backdrop-filter: saturate(140%) blur(var(--glass-blur));
   box-shadow: var(--glass-shadow);
   transition: transform 120ms ease, box-shadow 160ms ease, background 120ms ease, border-color 120ms ease;
+
+  /* Specular background overlay layers */
+  background-image:
+    linear-gradient(var(--specular-angle), rgba(255,255,255,0.18), rgba(255,255,255,0) 40%),
+    radial-gradient(120% 60% at -10% -20%, rgba(255,255,255,0.32), rgba(255,255,255,0) 60%);
+  background-blend-mode: screen, normal;
+  position: relative;
+  isolation: isolate;
 }
 
 .note-card:hover {
   transform: translateY(-1px);
   background: rgba(255,255,255,0.62);
   box-shadow: 0 10px 28px rgba(2,6,23,0.16);
+  background-image:
+    linear-gradient(var(--specular-angle), rgba(255,255,255,0.24), rgba(255,255,255,0) 40%),
+    radial-gradient(120% 60% at -10% -20%, rgba(255,255,255,0.36), rgba(255,255,255,0) 60%);
 }
 
 .note-title {
@@ -415,5 +630,8 @@ button, input, textarea {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .light-sweep::after {
+    display: none !important;
   }
 }
