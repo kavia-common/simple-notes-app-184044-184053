@@ -5,10 +5,12 @@ import NoteForm from './components/NoteForm';
 import NotesList from './components/NotesList';
 import { loadNotes, saveNotes } from './utils/storage';
 import Calendar, { toISODate } from './components/Calendar';
+import Calculator from './components/Calculator';
 
 // Key used to persist theme and selected date
 const THEME_STORAGE_KEY = 'notesApp:theme';
 const DATE_STORAGE_KEY = 'notesApp:selectedDate';
+const CALC_VIS_STORAGE_KEY = 'notesApp:calc:visible';
 
 // PUBLIC_INTERFACE
 export default function App() {
@@ -33,6 +35,11 @@ export default function App() {
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     return prefersDark ? 'dark' : 'light';
   });
+  const [showCalc, setShowCalc] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const raw = window.localStorage.getItem(CALC_VIS_STORAGE_KEY);
+    return raw === 'true';
+  });
   const headerRef = useRef(null);
 
   useEffect(() => {
@@ -49,6 +56,14 @@ export default function App() {
       // ignore
     }
   }, [theme]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(CALC_VIS_STORAGE_KEY, String(showCalc));
+    } catch {
+      // ignore
+    }
+  }, [showCalc]);
 
   useEffect(() => {
     // Persist selected date (or clear)
@@ -166,6 +181,16 @@ export default function App() {
             className="search-input light-sweep"
             aria-label="Search notes"
           />
+          <button
+            className="theme-toggle light-sweep"
+            onClick={() => setShowCalc((v) => !v)}
+            aria-pressed={showCalc ? 'true' : 'false'}
+            aria-label={showCalc ? 'Hide calculator' : 'Show calculator'}
+            title={showCalc ? 'Hide calculator' : 'Show calculator'}
+            type="button"
+          >
+            <span className="icon" aria-hidden="true">🧮</span>
+          </button>
         </div>
       </header>
 
@@ -177,11 +202,18 @@ export default function App() {
           <h2 id="calendar-heading" className="section-title">
             Pick a date to filter
           </h2>
-          <Calendar
-            labelledById="calendar-heading"
-            selectedDate={selectedDate}
-            onChange={setSelectedDate}
-          />
+          <div className="calendar-and-calc">
+            <Calendar
+              labelledById="calendar-heading"
+              selectedDate={selectedDate}
+              onChange={setSelectedDate}
+            />
+            {showCalc ? (
+              <div className="calculator-wrap" aria-label="Calculator container">
+                <Calculator />
+              </div>
+            ) : null}
+          </div>
         </section>
 
         <section

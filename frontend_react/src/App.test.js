@@ -6,3 +6,9 @@ test('renders header title', () => {
   const heading = screen.getByRole('heading', { name: /simple notes/i });
   expect(heading).toBeInTheDocument();
 });
+
+test('shows calculator toggle button', () => {
+  render(<App />);
+  const toggle = screen.getByRole('button', { name: /calculator/i });
+  expect(toggle).toBeInTheDocument();
+});
